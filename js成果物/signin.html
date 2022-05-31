@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>サインイン画面</title>
+        <!-- tailwindcss -->
+        <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+
+        <!-- alpine.js -->
+        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.8.2/dist/alpine.js" defer></script>
+        <!-- firebase -->
+        <!-- 
+            firebaseとは？
+            Googleが運営しているクラウドサービス。
+        -->
+        <script src="https://www.gstatic.com/firebasejs/8.4.3/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.4.3/firebase-auth.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.4.3/firebase-firestore.js"></script>
+        <script>
+            // firebaseの初期化
+            // ユーザーデータを使って初期化
+            firebase.initializeApp({
+                apiKey: "AIzaSyCDb1GO7A4Fi4iREILryGNX2jXJ41Wjlik",
+                authDomain: "jv31-73646.firebaseapp.com",
+                projectId: "jv31-73646",
+                storageBucket: "jv31-73646.appspot.com",
+                messagingSenderId: "655389030782",
+                appId: "1:655389030782:web:67d1e70e9e9c37f5e4db2f"
+            });
+            // 認証情報の機能を使うよ
+            firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+            // 認証状態を監視して、
+            // 認証状態が取得できたら
+            // index.htmlに飛ばす
+            var unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    location.href = "./index.html"
+                }
+                unsubscribe();
+            });
+        </script>
+    </head>
+
+    <body>
+        <div x-data="authentication()" class="bg-gradient-to-tr from-purple-700 to-purple-600 min-h-screen pt-12 md:pt-20 pb-6 px-2 md:px-0">
+            <!-- タイトル部 -->
+            <header class="max-w-lg mx-auto">
+                <a href="./signin.html">
+                    <h1 class="text-4xl font-bold text-center text-white">
+                        Tlack
+                    </h1>
+                </a>
+            </header>
+            <!-- 入力部品 -->
+            <main class="bg-white max-w-lg mx-auto p-8 md:p-12 my-10 rounded-lg shadow-2xl">
+                <section>
+                    <div class="flex flex-col">
+                        <template x-if="errorMessage">
+                            <div class="mb-6 pt-3 pb-3 rounded bg-red-200">
+                                <p class="block text-gray-700 text-sm font-bold ml-3" x-text="errorMessage"></p>
+                            </div>
+                        </template>
+                        <div class="mb-6 pt-3 rounded bg-gray-200">
+                            <label class="block text-gray-700 text-sm font-bold mb-2 ml-3" for="email">メールアドレス</label>
+                            <input type="email" id="email" required x-model="email.input"
+                                class="bg-gray-200 rounded w-full text-gray-700 focus:outline-none border-b-4 border-gray-300 focus:border-purple-600 transition duration-500 px-3 pb-3">
+                        </div>
+                        <div class="mb-6 pt-3 rounded bg-gray-200">
+                            <label class="block text-gray-700 text-sm font-bold mb-2 ml-3" for="password">パスワード</label>
+                            <input type="password" id="password" x-on:keydown.enter="signIn()" x-model="password.input"
+                                class="bg-gray-200 rounded w-full text-gray-700 focus:outline-none border-b-4 border-gray-300 focus:border-purple-600 transition duration-500 px-3 pb-3">
+                        </div>
+                        <div class="flex justify-end">
+                            <a href="#" class="text-sm text-purple-600 hover:text-purple-700 hover:underline mb-6">
+                                パスワードを忘れた
+                            </a>
+                        </div>
+                        <button
+                            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded shadow-lg hover:shadow-xl transition duration-200"
+                            @click="signIn()">システムにログインする</button>
+                    </div>
+                </section>
+            </main>
+
+            <div class=" max-w-lg mx-auto text-center mt-12 mb-6">
+                <p class="text-white">
+                    <a href="./signup.html" class="font-bold hover:underline">アカウントの作成をする</a>
+                </p>
+            </div>
+
+            <!-- フッターリンク -->
+            <footer class="max-w-lg mx-auto flex justify-center text-white">
+                <a href="#" class="hover:underline">Contact</a>
+                <span class="mx-3">•</span>
+                <a href="#" class="hover:underline">Privacy</a>
+            </footer>
+
+        </div>
+        <script>
+            function authentication() {
+                return {
+                    // メールアドレスに関するデータ
+                    email: {
+                        input: "", // 入力内容
+                        error: false, // エラーがあるかないか
+                        message: "" // エラーの際に表示するメッセージ
+                    },
+                    // パスワードに関するデータ
+                    password: {
+                        input: "",
+                        error: false,
+                        message: ""
+                    },
+                    // 入力チェックの関数
+                    validate() {
+                        // メールアドレスの入力がなかったら
+                        if (!this.email.input) {
+                            this.email.error = true
+                            this.email.message = "メールアドレスを入力してください。"
+                        }
+
+                        // パスワードの入力がなかったら
+                        if (!this.password.input) {
+                            this.password.error = true
+                            this.password.message = "パスワードを入力してください。"
+                        }
+
+                        // エラーがあったら true
+                        return this.email.error || this.password.error
+                    },
+                    // 全体的なエラーメッセージ
+                    errorMessage: null,
+                    // サインインした時の処理
+                    signIn() {
+                        this.errorMessage = null
+
+                        if (this.validate()) {
+                            return
+                        }
+
+                        // firebaseの機能を使ってログインする
+                        firebase.auth().signInWithEmailAndPassword(this.email.input, this.password.input)
+                            .then((userCredential) => {
+                                // 成功したら、index.htmlに飛ばす
+                                location.href = "./index.html"
+                            })
+                            .catch((error) => {
+                                // エラーが起こったらerrorMessageに格納
+                                this.errorMessage = error.message;
+                            })
+                    },
+                }
+            }
+        </script>
+    </body>
+
+</html>
